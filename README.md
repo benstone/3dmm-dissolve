@@ -5,6 +5,8 @@ on [Shon Katzenberger's patent](https://patents.google.com/patent/US5771033A/en)
 
 **NOTE:** This implementation is not complete. The patent also describes how the colour palette is faded during the transition. I haven't implemented that yet.
 
+https://user-images.githubusercontent.com/1490287/166219273-c390e3c6-fae7-48b1-b3f8-729ef9fb233f.mp4
+
 ## Requirements
 
 * Python 3.6+
