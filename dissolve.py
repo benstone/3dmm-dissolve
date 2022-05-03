@@ -1,3 +1,4 @@
+import argparse
 import pygame
 import pygame.image
 import pygame.surfarray
@@ -5,9 +6,7 @@ import random
 from typing import Callable
 
 FRAMERATE = 12.5
-
-WINDOW_WIDTH = 640
-WINDOW_HEIGHT = 480
+DEFAULT_TRANSITION_DURATION = 4.0
 
 
 class Transition:
@@ -20,7 +19,7 @@ class Transition:
     def reset(self):
         raise NotImplementedError
 
-    def update(self, time_delta_ms: int) -> bool:
+    def update(self, delta_ms: int) -> bool:
         raise NotImplementedError
 
 
@@ -35,6 +34,7 @@ class DissolveTransition(Transition):
         self.pixels_total = width * height
         self.pixels_swapped = 0
 
+        # Source: https://patents.google.com/patent/US5771033A/en
         # Step A: selecting a prime number p;
         # 3. The method of claim 1 wherein p=2^e+1 with e being
         #    a positive integer and m=2^c–1 with c being a positive
@@ -84,7 +84,8 @@ class DissolveTransition(Transition):
 
             # Step H: calculating a number knew according to the formula knew = (k*m) mod p, wherein m is a primitive
             # root of unity modulo p, and setting k=knew
-            self.k = (self.k * self.m) % self.p
+            knew = (self.k * self.m) % self.p
+            self.k = knew
 
         # TODO: Update the colour palette, as described in the patent:
         # The current palette is gradually changed to the source palette by linearly interpolating each palette entry
@@ -94,13 +95,27 @@ class DissolveTransition(Transition):
 
 
 def main():
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="3D Movie Maker dissolve demo")
+    parser.add_argument("source", nargs="?", default="source.png", help="Image to transition from")
+    parser.add_argument("destination", nargs="?", default="dest.png", help="Image to transition to")
+    parser.add_argument("--duration", type=float, default=DEFAULT_TRANSITION_DURATION, help="Transition duration")
+
+    args = parser.parse_args()
+
     pygame.init()
 
     # Load images
-    source_image = pygame.image.load("source.png")
-    source_pixels = pygame.surfarray.array3d(source_image)
+    source_image = pygame.image.load(args.source)
+    dest_image = pygame.image.load(args.destination)
 
-    dest_image = pygame.image.load("dest.png")
+    source_image_size = source_image.get_size()
+    window_width, window_height = source_image_size
+
+    if source_image_size != dest_image.get_size():
+        raise Exception("Images must be the same size")
+
+    source_pixels = pygame.surfarray.array3d(source_image)
     dest_pixels = pygame.surfarray.array3d(dest_image)
 
     # Make a copy of the source image as our starting point
@@ -110,12 +125,11 @@ def main():
     def swap_pixel(x, y):
         current_state[x, y] = dest_pixels[x, y]
 
-    # Dissolves in 3DMM are four seconds long
-    duration_ms = 4000
-    transition = DissolveTransition(duration_ms, WINDOW_WIDTH, WINDOW_HEIGHT, swap_pixel)
+    duration_ms = int(args.duration * 1000)
+    transition = DissolveTransition(duration_ms, window_width, window_height, swap_pixel)
 
     # Create display window
-    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    screen = pygame.display.set_mode((window_width, window_height))
     pygame.display.set_caption("3D Movie Maker dissolve - press SPACE to start/stop, ESC to restart")
 
     clock = pygame.time.Clock()

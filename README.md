@@ -15,8 +15,9 @@ https://user-images.githubusercontent.com/1490287/166219273-c390e3c6-fae7-48b1-b
 
 ## Usage
 
-Run `dissolve.py` to transition between two test images.
+Run `dissolve.py source-image dest-image` to transition between two images.
 
+* Add `--duration <duration-in-seconds>` to set the duration of the transition
 * Press SPACE to start/pause the transition
 * Press ESC to reset the transition
 
